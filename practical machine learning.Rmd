@@ -28,7 +28,7 @@ PmlTraining <- read.table("https://d396qusza40orc.cloudfront.net/predmachlearn/p
 pmlTesting <-  read.table("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", header = TRUE, sep = ",", dec = ".", na.strings=c("NA","#DIV/0!",""))
 #str(PmlTraining) to check dataset
 ```
-##Data cleaning
+## Data cleaning
 Processing data for analyses, by removing variables with missing data and character observations.
 
 ```{r data clean, echo=TRUE}
@@ -58,7 +58,7 @@ training <- Training1[inTrain,]; validation <- Training1[-inTrain,]
 dim(training);dim(validation)
 
 ```
-##Exploratory analysis
+## Exploratory analysis
 
 ```{r plots, echo=TRUE}
 #Due to the space limited the plots will not be shown
@@ -66,7 +66,8 @@ dim(training);dim(validation)
 #featurePlot(x=Training1[, c(1:52)], y = Training1$classe, plot = "pairs")
 
 ```
-##Fitting three different models.
+## Fitting three different models.
+
 we shall fit three different models and compare there accuracy and choose the best model for prediction on the testing data set. 
 ### Model 1 : Desicion tree
 ```{r model1, echo=TRUE}
@@ -86,7 +87,7 @@ Fitlda <- train(classe~., method = "lda", data = training)
 
 ```
 
-##Predict on the testing set
+## Predict on the testing set
 ```{r predict, echo= TRUE}
 pred1 <- predict(Fit, validation)
 pred2 <- predict(fit2Rf, validation)
@@ -101,6 +102,7 @@ AccuTest <- confusionMatrix(pred4, validation$classe)
 AccuTest
 ```
 From the above comparison result Random Forests model provided the best result with accuracy of 99.43%  which gives sample error to 0.57% and so as to the combined models. For this project we shall use Random Forests model to predict on the testing dataset.
+
 ## Predicting on the testing dataset
 ```{r predict test, echo = TRUE}
 pred5T<- predict(fit2Rf, newdata = Testing1, type = "class")
