@@ -10,8 +10,10 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-##Abstract
+## Abstract
+
 The main aim of this project is to predict the a behavior pattern labelled as "classe" variable from exercise activities. The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. The collected data from accelerometers on belt, forearm, arm, and dumbell of 6 participants will be used to perform machine learning project. Links to the datasets are; https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv, for training data set,;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv, for testing data set.
+
 ## Download required packages and data
 We shall download packages required and data.
 ```{r data, echo = TRUE}
