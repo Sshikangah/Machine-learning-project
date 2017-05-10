@@ -1,0 +1,125 @@
+---
+title: "Machine Learning project"
+author: "Sarah Shikangah"
+date: "May 7, 2017"
+output: html_document
+---
+
+
+## Abstract
+The main aim of this project is to predict the a behavior pattern labelled as "classe" variable from exercise activities. The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. The collected data from accelerometers on belt, forearm, arm, and dumbell of 6 participants will be used to perform machine learning project. Links to the datasets are; https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv, for training data set,;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv, for testing data set.
+## Download required packages and data
+We shall download packages required and data.
+```{r data, echo = TRUE}
+#Required packages
+library(caret)
+library(ggplot2)
+library(lattice)
+library(rattle)
+library(rpart.plot)
+library(kernlab)
+library(randomForest)
+library(MASS)
+set.seed(234)
+PmlTraining <- read.table("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", header = TRUE, sep = ",", dec = ".", na.strings=c("NA","#DIV/0!",""))
+pmlTesting <-  read.table("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", header = TRUE, sep = ",", dec = ".", na.strings=c("NA","#DIV/0!",""))
+#str(PmlTraining) to check dataset
+```
+##Data cleaning
+Processing data for analyses, by removing variables with missing data and character observations.
+
+```{r data clean, echo=TRUE}
+
+nzv <- nearZeroVar(PmlTraining, saveMetrics = TRUE)
+PmlTraining <- PmlTraining[, nzv$nzv==FALSE]
+Good <- names(which(colSums(is.na(PmlTraining)) ==0))
+PmlTraining1 <- subset(PmlTraining, select = Good)
+#Remove the first seven variables to avoid interferance .
+Training1 <- PmlTraining1[,-c(1:7)]
+
+#set all variables as numeric class with exception of classe variable
+Training1[, 1:51] <- lapply(Training1[, 1:51], as.numeric)
+
+dim(Training1)
+
+```
+
+## Splitting training dataset
+
+```{r split data, echo= TRUE}
+set.seed(234)
+inTrain <- createDataPartition(y=Training1$classe, p=0.75, list=FALSE)
+training <- Training1[inTrain,]; validation <- Training1[-inTrain,]
+dim(training);dim(validation)
+
+```
+##Exploratory analysis
+
+```{r plots, echo=TRUE}
+#Due to the space limited the plots will not be shown
+# check covariance and corrilation using (cov(training[, 1:53]);cor(training[, 1:53]))
+#featurePlot(x=Training1[, c(1:52)], y = Training1$classe, plot = "pairs")
+
+```
+## Cross validation
+
+To create some models of the training dataset and estimate their accuracy using validation set.
+1. we shall begin by setting up test harness to use 10-fold cross validation.
+2. we will then build 4 different models to predict "classe" from the training set.
+3. Select the best model to run on the testing data set.
+
+
+Will run algorithms using 10-fold cross validation
+SPlitting dataset into 10 parts, train in 9 and test on 1 then repeats
+
+## Fitting three different models.
+
+### Model 1 : Desicion tree
+```{r model1, echo=TRUE}
+set.seed(234)
+control <- trainControl(method = "cv", number = 10)
+metric <- "Accuracy"
+fittree <- train(classe~., method = "rpart", data = training, metric = metric, trControl = control)
+fancyRpartPlot(fittree$finalModel)
+```
+
+### Model 2 : Random Forest
+```{r, model 2, echo=TRUE}
+set.seed(234)
+fit2Rf <- randomForest(classe~.,data=training, ntree=200, importance=TRUE)
+plot(fit2Rf)
+```
+### Model 3 : Linear Discriminant Analysis
+```{r model 3, echo=TRUE}
+set.seed(234)
+fitlda <- train(classe~., data = Training1, method = "lda", metric =metric, trControl = control)
+
+```
+### Model 4 : k-Nearest Neigbors(kNN)
+```{r model 4, echo = TRUE}
+set.seed(234)
+fitknn <- train(classe~., data = Training1, method = "knn", metric =metric, trControl = control)
+```
+
+## Predict on the testing set
+```{r predict, echo= TRUE}
+pred1 <- predict(fittree, validation)
+pred2 <- predict(fit2Rf, validation)
+pred3 <- predict(fitlda, validation)
+pred4 <- predict(fitknn, validation)
+predDf <- data.frame(pred1, pred2, pred3, pred4, classe = validation$classe)
+CombMod <- train(classe~., method = "rf", data = predDf)
+pred5 <- predict(CombMod, predDf)
+
+
+rbind(postResample(pred1, obs = validation$classe), postResample(pred2, obs = validation$classe), postResample(pred3, obs = validation$classe), postResample(pred4, obs = validation$classe), postResample(pred5, obs = validation$classe))
+AccuTest <- confusionMatrix(pred2, validation$classe)
+AccuTest
+```
+From the above comparison result Random Forests model provided the best result with accuracy of 99.47%  which gives sample error to 0.53% and so as to the combined models. For this project we shall use Random Forests model to predict on the testing dataset.
+## Predicting on the testing dataset
+```{r predict test, echo = TRUE}
+pred5T<- predict(fit2Rf, newdata = pmlTesting)
+pred5T
+
+```
